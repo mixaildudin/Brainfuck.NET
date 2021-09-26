@@ -126,7 +126,7 @@ namespace Brainfuck.NET
 			_il.Emit(OpCodes.Ldloc, _headVar);
 			_il.Emit(OpCodes.Call, ConsoleRead);
 			_il.Emit(OpCodes.Conv_U1);
-			_il.Emit(OpCodes.Stelem_I);
+			_il.Emit(OpCodes.Stelem_I1);
 		}
 
 		private static void EmitLoopStart()
