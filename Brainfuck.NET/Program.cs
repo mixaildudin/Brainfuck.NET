@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
@@ -14,6 +15,8 @@ namespace Brainfuck.NET
 		private static LocalBuilder _tapeVar;
 
 		private static LocalBuilder _headVar;
+
+		private static readonly Stack<Loop> Loops = new();
 
 		private static readonly MethodInfo ConsoleWrite = typeof(Console).GetMethod(nameof(Console.Write),
 			new[] { typeof(char) }) ?? throw new InvalidOperationException();
@@ -126,16 +129,16 @@ namespace Brainfuck.NET
 			_il.Emit(OpCodes.Stelem_I);
 		}
 
-		private static Label _loopBody, _loopCondition;
-
 		private static void EmitLoopStart()
 		{
-			_loopBody = _il.DefineLabel();
-			_loopCondition = _il.DefineLabel();
+			var loopBody = _il.DefineLabel();
+			var loopCondition = _il.DefineLabel();
 
-			_il.Emit(OpCodes.Br, _loopCondition);
+			Loops.Push(new Loop(loopCondition, loopBody));
 
-			_il.MarkLabel(_loopBody);
+			_il.Emit(OpCodes.Br, loopCondition);
+
+			_il.MarkLabel(loopBody);
 			_il.Emit(OpCodes.Nop); // just to mark it as loop body
 
 			// loop body goes next...
@@ -143,14 +146,29 @@ namespace Brainfuck.NET
 
 		private static void EmitLoopFinish()
 		{
-			_il.MarkLabel(_loopCondition);
+			var loop = Loops.Pop();
+
+			_il.MarkLabel(loop.Condition);
 
 			_il.Emit(OpCodes.Ldloc, _tapeVar);
 			_il.Emit(OpCodes.Ldloc, _headVar);
 			_il.Emit(OpCodes.Ldelem_U1);
 			_il.Emit(OpCodes.Ldc_I4_0);
 			_il.Emit(OpCodes.Cgt_Un);
-			_il.Emit(OpCodes.Brtrue, _loopBody);
+			_il.Emit(OpCodes.Brtrue, loop.Body);
+		}
+
+		private class Loop
+		{
+			public Label Condition { get; }
+
+			public Label Body { get; }
+
+			public Loop(Label condition, Label body)
+			{
+				Condition = condition;
+				Body = body;
+			}
 		}
 	}
 }
