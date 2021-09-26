@@ -7,6 +7,8 @@ namespace Brainfuck.NET
 {
 	internal class Program
 	{
+		private static string _code;
+
 		private static ILGenerator _il;
 
 		private static LocalBuilder _tapeVar;
@@ -21,6 +23,8 @@ namespace Brainfuck.NET
 
 		public static void Main(string[] args)
 		{
+			_code = args[0];
+
 			const string typeName = "Program";
 			const string assemblyName = "test.exe";
 
@@ -28,7 +32,7 @@ namespace Brainfuck.NET
 			var builder = Thread.GetDomain().DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
 			var module = builder.DefineDynamicModule(assemblyName, assemblyName);
 			var typeBuilder = module.DefineType(typeName, TypeAttributes.Public | TypeAttributes.Class);
-			var mainMethodBuilder = typeBuilder.DefineMethod("PointMain", MethodAttributes.Public | MethodAttributes.Static,
+			var mainMethodBuilder = typeBuilder.DefineMethod("Main", MethodAttributes.Public | MethodAttributes.Static,
 				typeof(void), null);
 
 			_il = mainMethodBuilder.GetILGenerator();
@@ -37,11 +41,10 @@ namespace Brainfuck.NET
 			_headVar = _il.DeclareLocal(typeof(int));
 
 			_il.Emit(OpCodes.Ldc_I4, 30_000);
-			_il.Emit(OpCodes.Newarr, typeof(byte[]));
+			_il.Emit(OpCodes.Newarr, typeof(byte));
 			_il.Emit(OpCodes.Stloc, _tapeVar);
 
-			var code = args[0];
-			foreach (var codeChar in code)
+			foreach (var codeChar in _code)
 			{
 				switch (codeChar)
 				{
@@ -56,6 +59,12 @@ namespace Brainfuck.NET
 						break;
 					case '<':
 						EmitMoveHead(-1);
+						break;
+					case '[':
+						EmitLoopStart();
+						break;
+					case ']':
+						EmitLoopFinish();
 						break;
 					case '.':
 						EmitOutput();
@@ -115,6 +124,33 @@ namespace Brainfuck.NET
 			_il.Emit(OpCodes.Call, ConsoleRead);
 			_il.Emit(OpCodes.Conv_U1);
 			_il.Emit(OpCodes.Stelem_I);
+		}
+
+		private static Label _loopBody, _loopCondition;
+
+		private static void EmitLoopStart()
+		{
+			_loopBody = _il.DefineLabel();
+			_loopCondition = _il.DefineLabel();
+
+			_il.Emit(OpCodes.Br, _loopCondition);
+
+			_il.MarkLabel(_loopBody);
+			_il.Emit(OpCodes.Nop); // just to mark it as loop body
+
+			// loop body goes next...
+		}
+
+		private static void EmitLoopFinish()
+		{
+			_il.MarkLabel(_loopCondition);
+
+			_il.Emit(OpCodes.Ldloc, _tapeVar);
+			_il.Emit(OpCodes.Ldloc, _headVar);
+			_il.Emit(OpCodes.Ldelem_U1);
+			_il.Emit(OpCodes.Ldc_I4_0);
+			_il.Emit(OpCodes.Cgt_Un);
+			_il.Emit(OpCodes.Brtrue, _loopBody);
 		}
 	}
 }
