@@ -4,11 +4,12 @@
 	<PropertyGroup>
 		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
 		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-		<ProjectGuid>{25FCCFD7-EFDC-4135-839B-0DC2AD73AB52}</ProjectGuid>
-		<OutputType>Exe</OutputType>
+		<ProjectGuid>{4B964443-A56B-436B-9D5D-2738DECB0307}</ProjectGuid>
+		<ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+		<OutputType>Library</OutputType>
 		<AppDesignerFolder>Properties</AppDesignerFolder>
-		<RootNamespace>Brainfuck.NET</RootNamespace>
-		<AssemblyName>Brainfuck.NET</AssemblyName>
+		<RootNamespace>Brainfuck.NET.Tests</RootNamespace>
+		<AssemblyName>Brainfuck.NET.Tests</AssemblyName>
 		<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
 		<FileAlignment>512</FileAlignment>
 		<LangVersion>9</LangVersion>
@@ -37,14 +38,19 @@
 		<Reference Include="System.Core" />
 		<Reference Include="System.Data" />
 		<Reference Include="System.Xml" />
+		<Reference Include="nunit.framework, Version=3.5.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb">
+			<HintPath>..\packages\NUnit.3.5.0\lib\net45\nunit.framework.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<ItemGroup>
-		<Compile Include="Compiler.cs" />
-		<Compile Include="Parsing\Operation.cs" />
-		<Compile Include="Parsing\OperationType.cs" />
-		<Compile Include="Parsing\Parser.cs" />
-		<Compile Include="Program.cs" />
+		<Compile Include="ParserSpec.cs" />
 		<Compile Include="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Brainfuck.NET\Brainfuck.NET.csproj">
+	    <Project>{25fccfd7-efdc-4135-839b-0dc2ad73ab52}</Project>
+	    <Name>Brainfuck.NET</Name>
+	  </ProjectReference>
 	</ItemGroup>
 	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 	<!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

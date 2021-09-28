@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
+using Brainfuck.NET.Parsing;
 
 namespace Brainfuck.NET
 {
@@ -24,12 +25,10 @@ namespace Brainfuck.NET
 
 		public void Compile(string code, string assemblyName)
 		{
-			const string typeName = "Program";
-
 			var name = new AssemblyName(assemblyName);
 			var builder = Thread.GetDomain().DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
 			var module = builder.DefineDynamicModule(assemblyName, assemblyName);
-			var typeBuilder = module.DefineType(typeName, TypeAttributes.Public | TypeAttributes.Class);
+			var typeBuilder = module.DefineType("Program", TypeAttributes.Public | TypeAttributes.Class);
 			var mainMethodBuilder = typeBuilder.DefineMethod("Main",
 				MethodAttributes.Public | MethodAttributes.Static,
 				typeof(void), null);
@@ -43,32 +42,28 @@ namespace Brainfuck.NET
 			_il.Emit(OpCodes.Newarr, typeof(byte));
 			_il.Emit(OpCodes.Stloc, _tapeVar);
 
-			foreach (var codeChar in code)
+			var parser = new Parser(code);
+
+			foreach (var operation in parser.GetOperations())
 			{
-				switch (codeChar)
+				switch (operation.Type)
 				{
-					case '+':
-						EmitCurrentCellIncrement(1);
+					case OperationType.Increment:
+						EmitCurrentCellIncrement(operation.CumulativeValue);
 						break;
-					case '-':
-						EmitCurrentCellIncrement(-1);
+					case OperationType.MoveHead:
+						EmitMoveHead(operation.CumulativeValue);
 						break;
-					case '>':
-						EmitMoveHead(1);
-						break;
-					case '<':
-						EmitMoveHead(-1);
-						break;
-					case '[':
+					case OperationType.StartLoop:
 						EmitLoopStart();
 						break;
-					case ']':
+					case OperationType.FinishLoop:
 						EmitLoopFinish();
 						break;
-					case '.':
+					case OperationType.Output:
 						EmitOutput();
 						break;
-					case ',':
+					case OperationType.Input:
 						EmitInput();
 						break;
 				}
@@ -96,11 +91,11 @@ namespace Brainfuck.NET
 			_il.Emit(OpCodes.Stind_I1);
 		}
 
-		private void EmitMoveHead(int incrementBy)
+		private void EmitMoveHead(int moveBy)
 		{
 			// head += incrementBy;
 			_il.Emit(OpCodes.Ldloc, _headVar);
-			_il.Emit(OpCodes.Ldc_I4, incrementBy);
+			_il.Emit(OpCodes.Ldc_I4, moveBy);
 			_il.Emit(OpCodes.Add);
 			_il.Emit(OpCodes.Stloc, _headVar);
 		}
