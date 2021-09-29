@@ -28,7 +28,7 @@ namespace Brainfuck.NET.Parsing
 			_code = code;
 		}
 
-		private void ValidateBrackets(string code)
+		private static void ValidateBrackets(string code)
 		{
 			var openingBracketsPositions = new Stack<int>();
 
@@ -51,13 +51,16 @@ namespace Brainfuck.NET.Parsing
 				}
 			}
 
-			if (openingBracketsPositions.Any())
+			if (!openingBracketsPositions.Any())
 			{
-				// reverse so that indices could be read left to right
-				var mismatchingBracketsPositions = openingBracketsPositions.Reverse().Select(p => p + 1);
-				throw new BrainfuckParsingException(
-					$"Opening square brackets on positions {string.Join(", ", mismatchingBracketsPositions)} are unclosed");
+				return;
 			}
+
+			// oops, found unclosed '['s,
+			// reverse the stack so that indices could be read left to right
+			var mismatchingBracketsPositions = openingBracketsPositions.Reverse().Select(p => p + 1);
+			throw new BrainfuckParsingException(
+				$"Opening square brackets on positions {string.Join(", ", mismatchingBracketsPositions)} are unclosed");
 		}
 
 		public IEnumerable<Operation> GetOperations()
@@ -76,14 +79,16 @@ namespace Brainfuck.NET.Parsing
 					continue;
 				}
 
-				var isCumulative = operationType is OperationType.Increment or OperationType.MoveHead;
-				if (!isCumulative)
+				var isCumulative = CumulativeOperationIncrements.TryGetValue(codeChar, out var valueIncrement);
+
+				if (isCumulative)
 				{
-					yield return new Operation(operationType);
+					cumulativeValue += valueIncrement;
 				}
 				else
 				{
-					cumulativeValue += CumulativeOperationIncrements[codeChar];
+					yield return new Operation(operationType);
+					continue;
 				}
 
 				if (!isLast && GetOperationType(_code[i + 1]) == operationType)
@@ -91,7 +96,7 @@ namespace Brainfuck.NET.Parsing
 					continue;
 				}
 
-				// cumulative operation with result of 0 is useless
+				// current cumulative operation is finished, but the 0 result is useless
 				if (cumulativeValue == 0)
 				{
 					continue;
