@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
@@ -23,11 +24,12 @@ namespace Brainfuck.NET
 		private readonly MethodInfo _consoleRead = typeof(Console).GetMethod(nameof(Console.Read),
 			Array.Empty<Type>()) ?? throw new InvalidOperationException();
 
-		public void Compile(string code, string assemblyName)
+		public void Compile(string code, string outputAssemblyName)
 		{
-			var name = new AssemblyName(assemblyName);
-			var builder = Thread.GetDomain().DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
-			var module = builder.DefineDynamicModule(assemblyName, assemblyName);
+			var assemblyFileName = Path.GetFileName(outputAssemblyName);
+
+			var builder = Thread.GetDomain().DefineDynamicAssembly(new AssemblyName(assemblyFileName), AssemblyBuilderAccess.RunAndSave);
+			var module = builder.DefineDynamicModule(assemblyFileName, assemblyFileName);
 			var typeBuilder = module.DefineType("Program", TypeAttributes.Public | TypeAttributes.Class);
 			var mainMethodBuilder = typeBuilder.DefineMethod("Main",
 				MethodAttributes.Public | MethodAttributes.Static,
@@ -74,7 +76,26 @@ namespace Brainfuck.NET
 			typeBuilder.CreateType();
 
 			builder.SetEntryPoint(mainMethodBuilder);
-			builder.Save(assemblyName);
+			builder.Save(assemblyFileName);
+
+			var assemblyDirName = Path.GetDirectoryName(outputAssemblyName);
+
+			// builder.Save throws when its arguments looks like a file path, it wants a simple file name.
+			// so we need to move the result assembly manually when it is needed
+			if (!string.IsNullOrEmpty(assemblyDirName))
+			{
+				MoveAssemblyFile();
+			}
+
+			void MoveAssemblyFile()
+			{
+				if (File.Exists(outputAssemblyName))
+				{
+					File.Delete(outputAssemblyName);
+				}
+
+				File.Move(assemblyFileName, outputAssemblyName);
+			}
 		}
 
 		private void EmitCurrentCellIncrement(int incrementBy)
