@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Brainfuck.NET.Parsing
 {
@@ -22,7 +23,41 @@ namespace Brainfuck.NET.Parsing
 				throw new ArgumentOutOfRangeException(nameof(code), $"Specify {code}");
 			}
 
+			ValidateBrackets(code);
+
 			_code = code;
+		}
+
+		private void ValidateBrackets(string code)
+		{
+			var openingBracketsPositions = new Stack<int>();
+
+			for (var i = 0; i < code.Length; i++)
+			{
+				var codeChar = code[i];
+				switch (codeChar)
+				{
+					case '[':
+						openingBracketsPositions.Push(i);
+						break;
+					case ']':
+						if (!openingBracketsPositions.Any())
+						{
+							throw new BrainfuckParsingException(i + 1, "Unexpected ']'");
+						}
+
+						openingBracketsPositions.Pop();
+						break;
+				}
+			}
+
+			if (openingBracketsPositions.Any())
+			{
+				// reverse so that indices could be read left to right
+				var mismatchingBracketsPositions = openingBracketsPositions.Reverse().Select(p => p + 1);
+				throw new BrainfuckParsingException(
+					$"Opening square brackets on positions {string.Join(", ", mismatchingBracketsPositions)} are unclosed");
+			}
 		}
 
 		public IEnumerable<Operation> GetOperations()
