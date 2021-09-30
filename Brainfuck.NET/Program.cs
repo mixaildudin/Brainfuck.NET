@@ -8,7 +8,7 @@ namespace Brainfuck.NET
 		{
 			if (args.Length < 2)
 			{
-				Console.WriteLine("USAGE: Brainfuck.NET.exe code outputExeName");
+				Console.WriteLine("USAGE: bfc.exe code outputExeName");
 				return 1;
 			}
 
