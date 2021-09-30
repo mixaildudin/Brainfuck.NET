@@ -41,8 +41,8 @@
 	<ItemGroup>
 		<Compile Include="Compiler.cs" />
 		<Compile Include="Parsing\BrainfuckParsingException.cs" />
-		<Compile Include="Parsing\Operation.cs" />
-		<Compile Include="Parsing\OperationType.cs" />
+		<Compile Include="Parsing\Instruction.cs" />
+		<Compile Include="Parsing\InstructionType.cs" />
 		<Compile Include="Parsing\Parser.cs" />
 		<Compile Include="Program.cs" />
 		<Compile Include="Properties\AssemblyInfo.cs" />

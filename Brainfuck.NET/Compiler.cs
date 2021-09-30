@@ -46,26 +46,26 @@ namespace Brainfuck.NET
 
 			var parser = new Parser(code);
 
-			foreach (var operation in parser.GetOperations())
+			foreach (var operation in parser.GetInstructions())
 			{
 				switch (operation.Type)
 				{
-					case OperationType.Increment:
+					case InstructionType.Increment:
 						EmitCurrentCellIncrement(operation.CumulativeValue);
 						break;
-					case OperationType.MoveHead:
+					case InstructionType.MoveHead:
 						EmitMoveHead(operation.CumulativeValue);
 						break;
-					case OperationType.StartLoop:
+					case InstructionType.StartLoop:
 						EmitLoopStart();
 						break;
-					case OperationType.FinishLoop:
+					case InstructionType.FinishLoop:
 						EmitLoopFinish();
 						break;
-					case OperationType.Output:
+					case InstructionType.Output:
 						EmitOutput();
 						break;
-					case OperationType.Input:
+					case InstructionType.Input:
 						EmitInput();
 						break;
 				}
@@ -80,7 +80,7 @@ namespace Brainfuck.NET
 
 			var assemblyDirName = Path.GetDirectoryName(outputAssemblyName);
 
-			// builder.Save throws when its arguments looks like a file path, it wants a simple file name.
+			// builder.Save throws when its argument looks like a file path, it wants a simple file name.
 			// so we need to move the result assembly manually when it is needed
 			if (!string.IsNullOrEmpty(assemblyDirName))
 			{

@@ -8,7 +8,7 @@ namespace Brainfuck.NET.Parsing
 	{
 		private readonly string _code;
 
-		private static readonly Dictionary<char, int> CumulativeOperationIncrements = new()
+		private static readonly Dictionary<char, int> CumulativeInstructionsIncrements = new()
 		{
 			{ '+', 1 },
 			{ '-', -1 },
@@ -63,7 +63,7 @@ namespace Brainfuck.NET.Parsing
 				$"Opening square brackets on positions {string.Join(", ", mismatchingBracketsPositions)} are unclosed");
 		}
 
-		public IEnumerable<Operation> GetOperations()
+		public IEnumerable<Instruction> GetInstructions()
 		{
 			var cumulativeValue = 0;
 
@@ -72,14 +72,14 @@ namespace Brainfuck.NET.Parsing
 				var codeChar = _code[i];
 				var isLast = i == _code.Length - 1;
 
-				var operationType = GetOperationType(codeChar);
+				var instructionType = GetInstructionType(codeChar);
 
-				if (operationType is OperationType.Nop)
+				if (instructionType is InstructionType.Nop)
 				{
 					continue;
 				}
 
-				var isCumulative = CumulativeOperationIncrements.TryGetValue(codeChar, out var valueIncrement);
+				var isCumulative = CumulativeInstructionsIncrements.TryGetValue(codeChar, out var valueIncrement);
 
 				if (isCumulative)
 				{
@@ -87,46 +87,46 @@ namespace Brainfuck.NET.Parsing
 				}
 				else
 				{
-					yield return new Operation(operationType);
+					yield return new Instruction(instructionType);
 					continue;
 				}
 
-				if (!isLast && GetOperationType(_code[i + 1]) == operationType)
+				if (!isLast && GetInstructionType(_code[i + 1]) == instructionType)
 				{
 					continue;
 				}
 
-				// current cumulative operation is finished, but the 0 result is useless
+				// current cumulative instruction is finished, but the 0 result is useless
 				if (cumulativeValue == 0)
 				{
 					continue;
 				}
 
-				yield return new Operation(operationType, cumulativeValue);
+				yield return new Instruction(instructionType, cumulativeValue);
 				cumulativeValue = 0;
 			}
 		}
 
-		private static OperationType GetOperationType(char codeChar)
+		private static InstructionType GetInstructionType(char codeChar)
 		{
 			switch (codeChar)
 			{
 				case '+':
 				case '-':
-					return OperationType.Increment;
+					return InstructionType.Increment;
 				case '>':
 				case '<':
-					return OperationType.MoveHead;
+					return InstructionType.MoveHead;
 				case '[':
-					return OperationType.StartLoop;
+					return InstructionType.StartLoop;
 				case ']':
-					return OperationType.FinishLoop;
+					return InstructionType.FinishLoop;
 				case '.':
-					return OperationType.Output;
+					return InstructionType.Output;
 				case ',':
-					return OperationType.Input;
+					return InstructionType.Input;
 				default:
-					return OperationType.Nop;
+					return InstructionType.Nop;
 			}
 		}
 	}

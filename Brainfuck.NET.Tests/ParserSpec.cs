@@ -8,12 +8,12 @@ namespace Brainfuck.NET.Tests
 	public class ParserSpec
 	{
 		[TestCaseSource(nameof(_parserCases))]
-		public void Parser_ShouldGiveOptimalOperationList(string code, Operation[] expectedOperations)
+		public void Parser_ShouldGiveOptimalInstructionList(string code, Instruction[] expectedInstructions)
 		{
 			var parser = new Parser(code);
-			var operations = parser.GetOperations().ToArray();
+			var instructions = parser.GetInstructions().ToArray();
 
-			Assert.That(operations, Is.EqualTo(expectedOperations));
+			Assert.That(instructions, Is.EqualTo(expectedInstructions));
 		}
 
 		[TestCase("+++", null, null)]
@@ -49,33 +49,33 @@ namespace Brainfuck.NET.Tests
 
 		private static object[] _parserCases =
 		{
-			new object[] { "+++", new[] { new Operation(OperationType.Increment, 3) } },
-			new object[] { "+++.", new[] { new Operation(OperationType.Increment, 3), new Operation(OperationType.Output) } },
+			new object[] { "+++", new[] { new Instruction(InstructionType.Increment, 3) } },
+			new object[] { "+++.", new[] { new Instruction(InstructionType.Increment, 3), new Instruction(InstructionType.Output) } },
 			new object[]
 			{
 				",+++.", new[]
 				{
-					new Operation(OperationType.Input),
-					new Operation(OperationType.Increment, 3),
-					new Operation(OperationType.Output)
+					new Instruction(InstructionType.Input),
+					new Instruction(InstructionType.Increment, 3),
+					new Instruction(InstructionType.Output)
 				}
 			},
 			new object[]
 			{
 				",+-.", new[]
 				{
-					new Operation(OperationType.Input),
-					new Operation(OperationType.Output)
+					new Instruction(InstructionType.Input),
+					new Instruction(InstructionType.Output)
 				}
 			},
 			new object[]
 			{
 				",+>>.", new[]
 				{
-					new Operation(OperationType.Input),
-					new Operation(OperationType.Increment, 1),
-					new Operation(OperationType.MoveHead, 2),
-					new Operation(OperationType.Output)
+					new Instruction(InstructionType.Input),
+					new Instruction(InstructionType.Increment, 1),
+					new Instruction(InstructionType.MoveHead, 2),
+					new Instruction(InstructionType.Output)
 				}
 			}
 		};

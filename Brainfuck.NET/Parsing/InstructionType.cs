@@ -1,6 +1,6 @@
 ﻿namespace Brainfuck.NET.Parsing
 {
-	public enum OperationType
+	public enum InstructionType
 	{
 		Nop,
 
