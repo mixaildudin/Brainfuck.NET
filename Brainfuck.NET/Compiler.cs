@@ -10,6 +10,8 @@ namespace Brainfuck.NET
 {
 	public class Compiler
 	{
+		public const int DefaultTapeLength = 30_000;
+
 		private ILGenerator _il;
 
 		private LocalBuilder _tapeVar;
@@ -24,9 +26,9 @@ namespace Brainfuck.NET
 		private readonly MethodInfo _consoleRead = typeof(Console).GetMethod(nameof(Console.Read),
 			Array.Empty<Type>()) ?? throw new InvalidOperationException();
 
-		public void Compile(string code, string outputAssemblyName)
+		public void Compile(string code, CompilerOptions options)
 		{
-			var assemblyFileName = Path.GetFileName(outputAssemblyName);
+			var assemblyFileName = Path.GetFileName(options.OutputAssemblyPath);
 
 			var builder = Thread.GetDomain().DefineDynamicAssembly(new AssemblyName(assemblyFileName), AssemblyBuilderAccess.RunAndSave);
 			var module = builder.DefineDynamicModule(assemblyFileName, assemblyFileName);
@@ -37,10 +39,39 @@ namespace Brainfuck.NET
 
 			_il = mainMethodBuilder.GetILGenerator();
 
+			CompileInternal(code, options.TapeLength);
+
+			typeBuilder.CreateType();
+
+			builder.SetEntryPoint(mainMethodBuilder);
+			builder.Save(assemblyFileName);
+
+			var assemblyDirName = Path.GetDirectoryName(options.OutputAssemblyPath);
+
+			// builder.Save throws when its argument looks like a file path, it wants a simple file name.
+			// so we need to move the result assembly manually when it is needed
+			if (!string.IsNullOrEmpty(assemblyDirName))
+			{
+				MoveAssemblyFile();
+			}
+
+			void MoveAssemblyFile()
+			{
+				if (File.Exists(options.OutputAssemblyPath))
+				{
+					File.Delete(options.OutputAssemblyPath);
+				}
+
+				File.Move(assemblyFileName, options.OutputAssemblyPath);
+			}
+		}
+
+		private void CompileInternal(string code, int tapeLength)
+		{
 			_tapeVar = _il.DeclareLocal(typeof(byte[]));
 			_headVar = _il.DeclareLocal(typeof(int));
 
-			_il.Emit(OpCodes.Ldc_I4, 30_000);
+			_il.Emit(OpCodes.Ldc_I4, tapeLength);
 			_il.Emit(OpCodes.Newarr, typeof(byte));
 			_il.Emit(OpCodes.Stloc, _tapeVar);
 
@@ -72,30 +103,6 @@ namespace Brainfuck.NET
 			}
 
 			_il.Emit(OpCodes.Ret);
-
-			typeBuilder.CreateType();
-
-			builder.SetEntryPoint(mainMethodBuilder);
-			builder.Save(assemblyFileName);
-
-			var assemblyDirName = Path.GetDirectoryName(outputAssemblyName);
-
-			// builder.Save throws when its argument looks like a file path, it wants a simple file name.
-			// so we need to move the result assembly manually when it is needed
-			if (!string.IsNullOrEmpty(assemblyDirName))
-			{
-				MoveAssemblyFile();
-			}
-
-			void MoveAssemblyFile()
-			{
-				if (File.Exists(outputAssemblyName))
-				{
-					File.Delete(outputAssemblyName);
-				}
-
-				File.Move(assemblyFileName, outputAssemblyName);
-			}
 		}
 
 		private void EmitCurrentCellIncrement(int incrementBy)
