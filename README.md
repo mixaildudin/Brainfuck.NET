@@ -10,6 +10,8 @@ e.g. `++-++` is just `+=4` instead of five separate instructions.
 ## Hot to use?
 
 ### CLI
+Download the latest `bfc.exe` from the [Releases page](https://github.com/mixaildudin/Brainfuck.NET/releases/).
+
 `bfc.exe [--file source.b] [--code code] --out outputExe [--tape tapeLength] [--help]`
 
 Here
