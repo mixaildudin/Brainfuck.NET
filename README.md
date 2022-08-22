@@ -26,7 +26,7 @@ You must specify either `--file` or `--code`.
 ### Code
 To be done...
 
-## Why not .NET Core or .NET 5?
+## Why not .NET Core or .NET 6?
 I mainly started this project for educational purposes: to understand how MSIL works.
 I needed an .exe file generation, but in .NET Core / .NET 5 the `AssemblyBuilder` class
 does not have a convenient `Save` method as it does in good old .NET Framework.
@@ -34,5 +34,5 @@ does not have a convenient `Save` method as it does in good old .NET Framework.
 The project is written under 4.8. The compiled executables were tested under 4.8,
 but might as well work under older versions.
 
-Maybe I will port this project to .NET 5 or 6 making use of [`Mono.Cecil`](https://github.com/jbevain/cecil)
+Maybe I will port this project to .NET 6 making use of [`Mono.Cecil`](https://github.com/jbevain/cecil)
 or [`ILPack`](https://github.com/Lokad/ILPack) in the future.
